@@ -1,0 +1,26 @@
+{
+  "name": "html5-games-novice-to-ninja",
+  "version": "1.0.0",
+  "description": "html5 games novice to ninja book code practice",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "budo src/main.js:build.js --live -- -t [ babelify --presets [ env ] ]",
+    "build": "browserify src/main.js -o bundle.js -t [ babelify --presets [ env ] ]"
+  },
+  "keywords": [
+    "game",
+    "dev",
+    "html5",
+    "javascript",
+    "test",
+    "practice"
+  ],
+  "author": "Facundo Guini",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "babelify": "^8.0.0",
+    "budo": "^11.6.3"
+  }
+}
