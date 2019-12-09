@@ -1,148 +1,66 @@
-// // Globals
-// const canvas = document.querySelector("#board canvas");
-// const ctx = canvas.getContext("2d");
-// console.log(ctx.canvas);
-
-// // Style
-// ctx.strokeStyle = "black";
-// ctx.fillStyle = "red"
-
-// // Rectangle
-// ctx.fillRect(300, 200, 50, 50);
-// ctx.strokeRect(300, 200, 50, 50);
-
-// // Circle
-// ctx.beginPath();
-// ctx.arc(325, 170, 25, 0, Math.PI * 2, false);
-// ctx.fill();
-// ctx.stroke();
-
 // Globals
 const canvas = document.querySelector("#board canvas");
 const ctx = canvas.getContext("2d");
 const {width: w, height: h} = canvas;
-// Background black
-// ctx.fillStyle = "black";
-// ctx.fillRect(0, 0, w, h);
-// ctx.fillStyle = "#555";
-// Draw lines over the mask
 
-// Starfield!
-ctx.fillStyle = "#444";
-let x, y, radius;
-for(let i = 0; i < 550; i++) {
-    x = Math.random() * w;
-    y = Math.random() * h;
-    radius = Math.random() * 3;
+// BUBBLES
+// // Game setup code
+// ctx.fillStyle = "#000";
+// ctx.globalAlpha = 0.02;
 
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2, false);
-    ctx.fill();
+// function loopy(t) {
+//     requestAnimationFrame(loopy);
+
+//     // Game logic code
+//     ctx.save();
+//     ctx.fillRect(0, 0, w, h);
+//     ctx.fillStyle = "#fff";
+//     ctx.globalAlpha = 1;
+//     // Random circle
+//     const x = Math.random() * w;
+//     const y = Math.random() * h;
+//     const radius = Math.random() * 20;
+//     ctx.beginPath();
+//     ctx.arc(x, y, radius, 0, Math.PI * 2);
+//     ctx.fill();
+//     ctx.restore();
+
+// }
+// requestAnimationFrame(loopy); // Start things running!
+
+// Race with delta
+
+// Game setup code
+let dt = 0;
+let last = 0;
+const speed = 80;
+let p1 = 0;
+let p2 = 0;
+
+function loopy(ms) {
+    requestAnimationFrame(loopy);
+
+    // Game general code
+    const t = ms / 1000; // Let's work in miliseconds
+    dt = t - last;
+    last = t;
+
+    // Game logic code
+    // Stats
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeText(`Frame length: ${(dt * 1000).toFixed(2)} ms`, 70, 50);
+    ctx.strokeText(`Total time: ${t.toFixed(2)}`, 70, 90);
+
+    // Squares movement
+    p1 += speed * dt;
+    p2 += speed * (1 / 60);
+    if(p1 > w) p1 -= w + 50;
+    if(p2 > w) p2 -= w + 50;
+
+    ctx.fillStyle = "#f00";
+    ctx.fillRect(p1, 250, 50, 50);
+    ctx.fillStyle = "#0f0";
+    ctx.fillRect(p2, 350, 50, 50);
 }
-ctx.translate(319, 188);
-
-// Text
-// ctx.font = "20pt courier";
-// const center = w / 2;
-// ctx.textAlign = "center";
-// for(let i = 0; i < 11; i++) {
-//     ctx.fillText("if you're in the game", center, i * 40);
-// }
-// ctx.strokeText("strokes the word", center, h - 30);
-
-// Images
-// const img = new Image();
-// img.src = "res/images/rick.png";
-// img.addEventListener("load", draw, false);
-// const img = new Image();
-// img.src = "res/images/snowflake.png";
-// img.addEventListener("load", draw, false);
-
-// function draw() {
-//     for(let i = 0; i < 100; i++) {
-//         let x = Math.random() * w;
-//         let y = Math.random() * h;
-//         let scale = Math.random();
-
-//         let {width, height} = img;
-
-//         ctx.drawImage(img, x, y, width * scale, height * scale);
-//     }
-// }
-
-// // Draw the original
-// function draw() {
-//     ctx.drawImage(img, 170, 140);
-//     // Draw cropped images
-//     for(let i = 0; i < 22; i++) {
-//         ctx.drawImage(
-//             img,
-//             // source
-//             32, 0, 53, 75,
-//             // destination location
-//             i * 20, i * 10,
-//             // destination scale
-//             i * 0.2 * 53, i * 0.2 * 75
-//         );
-//     }
-// }
-
-// Transformations
-// function draw() {
-//     for(let i = 0; i < 100; i++) {
-//         const x = Math.random() * w;
-//         const y = Math.random() * h;
-//         ctx.fillRect(x, y, 50, 50);
-//     }
-// }
-
-// ctx.fillStyle = "black";
-// draw();
-// ctx.save();
-// ctx.fillStyle = "red";
-// draw();
-// ctx.restore();
-// // Back in black!
-// draw();
-// ctx.translate(w / 2, h / 2);
-// for(let ring = 1; ring < 180; ring++) {
-//     ctx.fillStyle = `hsl(${ring * 25}, 90%, 50%)`;
-//     for(let dots = 0; dots < ring * 6; dots++) {
-//         ctx.rotate((Math.PI * 2) / (ring * 6));
-//         ctx.beginPath();
-//         ctx.arc(0, ring * 15, 7, 0, Math.PI * 2, true);
-//         ctx.fill();
-//     }
-// }
-
-
-// COMPANY LOGO
-// Draw the words as a mask
-ctx.font = "bold 70pt monospace";
-ctx.fillStyle = "black";
-ctx.fillText("MORO", 10, 60);
-ctx.fillText("SAURIO", 10, 118);
-
-// Draw lines over the mask
-ctx.globalCompositeOperation = "source-atop";
-
-// Rainbow!
-for(let i = 0; i < 6; i++) {
-    ctx.fillStyle = `hsl(${i * (250 / 6)}, 90%, 55%)`;
-    ctx.fillRect(0, i * 20, 400, 50);
-}
-
-// Draw the shadow behind the logo
-ctx.fillStyle = "#999";
-ctx.globalCompositeOperation = "destination-over";
-ctx.fillText("MORO", 13, 62);
-ctx.fillText("SAURIO", 13, 120);
-ctx.font = "30pt monospace";
-
-// Back to default
-ctx.globalCompositeOperation = "source-over";
-
-// Add characters (so they are evenly spaced)
-"games".split("").forEach((ch, i) => {
-    ctx.fillText(ch, i * 37 + 12, 145);
-});
+requestAnimationFrame(loopy); // Start things running!
