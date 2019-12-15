@@ -1,6 +1,7 @@
 import moro from '../moro';
 const {Container, Controls, Entities} = moro;
 const {CanvasRenderer} = moro.Renderers;
+const {Sprite, Texture} = Entities;
 
 // Game setup
 const {w, h} = {w: 800, h: 600};
@@ -22,18 +23,18 @@ function loopy(ms) {
 }
 requestAnimationFrame(loopy);
 
-// Example game element to manipulate
-const message = new Entities.Text("The renderer!", {
-    font: '40pt monospace',
-    fill: 'blue',
-    align: 'center'
-});
-message.pos.x = w / 2;
-message.pos.y = h / 2;
-message.update = function(dt) {
-    this.pos.x -= 300 * dt;
-    if(this.pos.x < -220)
-        this.pos.x = w + 200;
-};
-scene.add(message);
-renderer.render(scene);
+// Game logic
+const texture = new Texture("res/images/spaceship.png");
+for(let i = 0; i < 50; i++) {
+    const speed = Math.random() * 150 + 50;
+    const ship = new Sprite(texture);
+    ship.pos.x = Math.random() * w;
+    ship.pos.y = Math.random() * h;
+    ship.update = function(dt) {
+        this.pos.y += speed * dt;
+        if(this.pos.y > h) {
+            this.pos.y = -32;
+        }
+    };
+    scene.add(ship);
+}
