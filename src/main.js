@@ -13,6 +13,8 @@ document.querySelector('#board').appendChild(renderer.view);
 let dt = 0;
 let last = 0;
 let lastShot = 0;
+let shotSpeed = 0.5;
+let shotModifierTimer = null;
 let lastSpawn = 0;
 let spawnSpeed = 1.0;
 let scoreAmount = 0;
@@ -25,7 +27,7 @@ function loopy(ms) {
     last = t;
 
     // Fire
-    if(!gameOver && controls.action && t - lastShot > 0.15) {
+    if(!ship.dead && !gameOver && controls.action && t - lastShot > shotSpeed) {
         lastShot = t;
         fire(ship.pos.x + 12, ship.pos.y + 10);
     }
@@ -38,6 +40,24 @@ function loopy(ms) {
         spawnEnemy(w, position, speed);
         // Accelerating for the next spawn
         spawnSpeed = spawnSpeed < 0.05 ? 0.6 : spawnSpeed * 0.97 + 0.001;
+    }
+
+    if(Math.floor(Math.random() * 200) === 1) {
+        const position = Math.random() * (h / 2 - 16);
+        spawnItem(w, position);
+    }
+
+    for(let item of items.children) {
+        const dx = item.pos.x + 16 - (ship.pos.x + 8);
+        const dy = item.pos.y + 16 - (ship.pos.y + 8);
+        if(Math.sqrt(dx * dx + dy * dy) < 24) {
+            clearTimeout(shotModifierTimer);
+            item.dead = true;
+            shotSpeed = 0.15;
+            shotModifierTimer = setTimeout(function() {
+                shotSpeed = 0.5;
+            }, 5000);
+        }
     }
 
     for(let enemy of enemies.children) {
@@ -71,6 +91,7 @@ const controls = new Controls.KeyControl();
 const textures = {
     background: new Texture('res/images/bg.png'),
     bullet: new Texture('res/images/bullet.png'),
+    bulletItem: new Texture('res/images/bullet-item.png'),
     enemy: new Texture('res/images/baddie.png'),
     spaceship: new Texture('res/images/spaceship.png'),
 };
@@ -108,15 +129,34 @@ function spawnEnemy(x, y, speed) {
     const enemy = new Sprite(textures.enemy);
     enemy.pos.x = x;
     enemy.pos.y = y;
+    enemy.direction = Math.round(Math.random() * -2 + 1);
     enemy.update = function(dt) {
         this.pos.x += speed * dt;
+        if(this.direction)
+            this.pos.y += speed * dt * this.direction / 2;
         if(this.pos.x < -32) {
             this.dead = true;
             if(!gameOver)
                 cityLifesAmount -= 1;
         }
+        if(this.pos.y >= 130 || this.pos.y <= 0)
+            this.direction *= -1;
     };
     enemies.add(enemy);
+}
+
+// Items
+const items = new Container();
+function spawnItem(x, y) {
+    const item = new Sprite(textures.bulletItem);
+    item.pos.x = x;
+    item.pos.y = y;
+    item.update = function(dt) {
+        this.pos.x -= 400 * dt;
+        if(this.pos.x < -16)
+            this.dead = true;
+    };
+    items.add(item);
 }
 
 // Add the score game object
@@ -165,5 +205,6 @@ scene.add(new Sprite(textures.background));
 scene.add(ship);
 scene.add(bullets);
 scene.add(enemies);
+scene.add(items);
 scene.add(score);
 scene.add(cityLifes);
