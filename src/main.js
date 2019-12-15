@@ -16,8 +16,8 @@ let lastShot = 0;
 let lastSpawn = 0;
 let spawnSpeed = 1.0;
 let scoreAmount = 0;
+let cityLifesAmount = 3;
 let gameOver = false;
-let sceneLen = 0;
 function loopy(ms) {
     requestAnimationFrame(loopy);
     const t = ms / 1000;
@@ -39,6 +39,26 @@ function loopy(ms) {
         // Accelerating for the next spawn
         spawnSpeed = spawnSpeed < 0.05 ? 0.6 : spawnSpeed * 0.97 + 0.001;
     }
+
+    for(let enemy of enemies.children) {
+        for(let bullet of bullets.children) {
+            // Check distance between baddie and bullet
+            const dx = enemy.pos.x + 16 - (bullet.pos.x + 8);
+            const dy = enemy.pos.y + 16 - (bullet.pos.y + 8);
+            if(Math.sqrt(dx * dx + dy * dy) < 24) {
+                // A hit!
+                bullet.dead = true;
+                enemy.dead = true;
+                handleScore(Math.floor(t));
+            }
+        }
+        const dx = enemy.pos.x + 16 - (ship.pos.x + 8);
+        const dy = enemy.pos.y + 16 - (ship.pos.y + 8);
+        if(Math.sqrt(dx * dx + dy * dy) < 24)
+            ship.dead = true;
+    }
+    if(!gameOver && cityLifesAmount <= 0)
+        triggerGameOver();
 
     scene.update(dt, t);
     renderer.render(scene);
@@ -78,17 +98,6 @@ function fire(x, y) {
         this.pos.x += dt * 400;
         if(this.pos.x > w - 20)
             bullet.dead = true;
-        if(!this.dead) {
-            for(let enemy of enemies.children) {
-                const dx = enemy.pos.x + 16 - (bullet.pos.x + 8);
-                const dy = enemy.pos.y + 16 - (bullet.pos.y + 8);
-                if(Math.sqrt(dx * dx + dy * dy) < 24) {
-                    enemy.dead = true;
-                    bullet.dead = true;
-                    handleScore(5);
-                }
-            }
-        }
     };
     bullets.add(bullet);
 }
@@ -103,13 +112,8 @@ function spawnEnemy(x, y, speed) {
         this.pos.x += speed * dt;
         if(this.pos.x < -32) {
             this.dead = true;
-            handleScore(-1);
-        }
-        if(!this.dead) {
-            const dx = enemy.pos.x + 16 - (ship.pos.x + 8);
-            const dy = enemy.pos.y + 16 - (ship.pos.y + 8);
-            if(Math.sqrt(dx * dx + dy * dy) < 24)
-                handleScore(scoreAmount * -1);
+            if(!gameOver)
+                cityLifesAmount -= 1;
         }
     };
     enemies.add(enemy);
@@ -121,31 +125,38 @@ const score = new Text('score:', {
     fill: '#8B8994',
     align: 'center'
 });
-score.pos.x = w / 2;
+score.pos.x = w / 4 * 3;
 score.pos.y = h - 30;
 score.update = function() {
     score.text = `score: ${scoreAmount}`;
 };
 
+// Add the city lifes
+const cityLifes = new Text('cityLifes:', {
+    font: '20px sans-serif',
+    fill: '#8B8994',
+    align: 'center'
+});
+cityLifes.pos.x = w / 4;
+cityLifes.pos.y = h - 30;
+cityLifes.update = function() {
+    cityLifes.text = `Lifes: ${cityLifesAmount}`;
+};
+
 function handleScore(points = 0) {
-    let toScore = scoreAmount + points;
-    if(toScore <= 0 && !gameOver)
-        triggerGameOver();
-    else
-        scoreAmount = toScore;
+    scoreAmount += points;
 }
 
 // Game Over
 function triggerGameOver() {
-    const gameOverMessage = new Text("GAME OVER!", {
-        font: '100px sans-serif',
-        fill: '#FA6780',
-        align: 'center'
+    const gameOverMessage = new Text("Game Over", {
+        font: "30pt sans-serif",
+        fill: "#8B8994",
+        align: "center"
     });
-    gameOverMessage.pos.x = w / 4;
-    gameOverMessage.pos.y = h / 4 - 50;
+    gameOverMessage.pos = {x: w / 2, y: 120};
     scene.add(gameOverMessage);
-    ship.dead = true;
+    scene.remove(ship);
     gameOver = true;
 }
 
@@ -155,3 +166,4 @@ scene.add(ship);
 scene.add(bullets);
 scene.add(enemies);
 scene.add(score);
+scene.add(cityLifes);

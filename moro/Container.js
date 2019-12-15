@@ -6,6 +6,7 @@ class Container {
 
     add(child) {
         this.children = [...this.children, child];
+        return child;
     }
 
     remove(child) {
@@ -14,9 +15,9 @@ class Container {
     }
 
     update(dt, t) {
-        this.children = this.children.filter(function(child) {
+        this.children = this.children.filter((child) => {
             if(child.update)
-                child.update(dt, t);
+                child.update(dt, t, this);
             return !child.dead;
         });
     }
