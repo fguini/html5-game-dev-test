@@ -1,34 +1,39 @@
-import KeyControl from '../lib/KeyControl';
-import MouseControl from '../lib/MouseControl';
+import moro from '../moro';
+const {Container, Controls, Entities} = moro;
+const {CanvasRenderer} = moro.Renderers;
 
-// Globals
-const canvas = document.querySelector("#board canvas");
-const ctx = canvas.getContext("2d");
-const {width: w, height: h} = canvas;
+// Game setup
+const {w, h} = {w: 800, h: 600};
+const renderer = new CanvasRenderer(w, h);
+document.querySelector("#board").appendChild(renderer.view);
+const scene = new Container();
+const controls = new Controls.KeyControl();
 
-// Game setup code
-let x = w / 2;
-let y = h / 2;
-let color = 0;
-const controls = new KeyControl();
-const mouse = new MouseControl(canvas);
-
+// Main loop
+let dt = 0;
+let last = 0;
 function loopy(ms) {
     requestAnimationFrame(loopy);
-
-    // Game logic code
-    const x = mouse.pos.x;
-    const y = mouse.pos.y;
-    if(mouse.isDown) {
-        color += 10;
-        if(color > 360) {
-            color -= 360;
-        }
-    }
-    // Draw the rectangle
-    ctx.fillStyle = `hsl(${color}, 50%, 50%)`;
-    ctx.fillRect(x, y, 50, 50);
-    // Don't forget to update at the end!
-    mouse.update();
+    const t = ms / 1000;
+    dt = t - last;
+    last = t;
+    scene.update(dt, t);
+    renderer.render(scene);
 }
-requestAnimationFrame(loopy); // Start things running!
+requestAnimationFrame(loopy);
+
+// Example game element to manipulate
+const message = new Entities.Text("The renderer!", {
+    font: '40pt monospace',
+    fill: 'blue',
+    align: 'center'
+});
+message.pos.x = w / 2;
+message.pos.y = h / 2;
+message.update = function(dt) {
+    this.pos.x -= 300 * dt;
+    if(this.pos.x < -220)
+        this.pos.x = w + 200;
+};
+scene.add(message);
+renderer.render(scene);
