@@ -14,8 +14,11 @@ class Container {
     }
 
     update(dt, t) {
-        for(let child of this.children)
-            if(child.update) child.update(dt, t);
+        this.children = this.children.filter(function(child) {
+            if(child.update)
+                child.update(dt, t);
+            return !child.dead;
+        });
     }
 }
 
