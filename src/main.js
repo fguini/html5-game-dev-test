@@ -1,210 +1,48 @@
-import moro from '../moro';
-const {Container, Controls, Entities} = moro;
-const {CanvasRenderer} = moro.Renderers;
-const {Sprite, Text, Texture} = Entities;
+import moro from "../moro/index.js";
+const {Container, Entities, Game, math} = moro;
+const {Sprite, Texture} = Entities;
 
-// Game setup
-const w = 640;
-const h = 300;
-const renderer = new CanvasRenderer(w, h);
-document.querySelector('#board').appendChild(renderer.view);
+const game = new Game(640, 320);
+const {scene, w, h} = game;
 
-// Main loop
-let dt = 0;
-let last = 0;
-let lastShot = 0;
-let shotSpeed = 0.5;
-let shotModifierTimer = null;
-let lastSpawn = 0;
-let spawnSpeed = 1.0;
-let scoreAmount = 0;
-let cityLifesAmount = 3;
-let gameOver = false;
-function loopy(ms) {
-    requestAnimationFrame(loopy);
-    const t = ms / 1000;
-    dt = t - last;
-    last = t;
-
-    // Fire
-    if(!ship.dead && !gameOver && controls.action && t - lastShot > shotSpeed) {
-        lastShot = t;
-        fire(ship.pos.x + 12, ship.pos.y + 10);
-    }
-
-    // Spawn bad guys
-    if(t - lastSpawn > spawnSpeed) {
-        lastSpawn = t;
-        const speed = -50 - (Math.random() * Math.random() * 100);
-        const position = Math.random() * (h / 2 - 16);
-        spawnEnemy(w, position, speed);
-        // Accelerating for the next spawn
-        spawnSpeed = spawnSpeed < 0.05 ? 0.6 : spawnSpeed * 0.97 + 0.001;
-    }
-
-    if(Math.floor(Math.random() * 200) === 1) {
-        const position = Math.random() * (h / 2 - 16);
-        spawnItem(w, position);
-    }
-
-    for(let item of items.children) {
-        const dx = item.pos.x + 16 - (ship.pos.x + 8);
-        const dy = item.pos.y + 16 - (ship.pos.y + 8);
-        if(Math.sqrt(dx * dx + dy * dy) < 24) {
-            clearTimeout(shotModifierTimer);
-            item.dead = true;
-            shotSpeed = 0.15;
-            shotModifierTimer = setTimeout(function() {
-                shotSpeed = 0.5;
-            }, 5000);
-        }
-    }
-
-    for(let enemy of enemies.children) {
-        for(let bullet of bullets.children) {
-            // Check distance between baddie and bullet
-            const dx = enemy.pos.x + 16 - (bullet.pos.x + 8);
-            const dy = enemy.pos.y + 16 - (bullet.pos.y + 8);
-            if(Math.sqrt(dx * dx + dy * dy) < 24) {
-                // A hit!
-                bullet.dead = true;
-                enemy.dead = true;
-                handleScore(Math.floor(t));
-            }
-        }
-        const dx = enemy.pos.x + 16 - (ship.pos.x + 8);
-        const dy = enemy.pos.y + 16 - (ship.pos.y + 8);
-        if(Math.sqrt(dx * dx + dy * dy) < 24)
-            ship.dead = true;
-    }
-    if(!gameOver && cityLifesAmount <= 0)
-        triggerGameOver();
-
-    scene.update(dt, t);
-    renderer.render(scene);
-}
-requestAnimationFrame(loopy);
-
-// Game objects
-const scene = new Container();
-const controls = new Controls.KeyControl();
+// Load game textures
 const textures = {
-    background: new Texture('res/images/bg.png'),
-    bullet: new Texture('res/images/bullet.png'),
-    bulletItem: new Texture('res/images/bullet-item.png'),
-    enemy: new Texture('res/images/baddie.png'),
-    spaceship: new Texture('res/images/spaceship.png'),
-};
-const ship = new Sprite(textures.spaceship);
-ship.pos.x =  10;
-ship.pos.y = h / 4;
-ship.update = function(dt, t) {
-    const {pos} = this;
-    pos.x += controls.x * dt * 200;
-    pos.y += controls.y * dt * 200;
-
-    if(pos.x < 0) pos.x = 0;
-    if(pos.x > (w / 2 - 16)) pos.x = (w / 2 - 16);
-    if(pos.y < 0) pos.y = 0;
-    if(pos.y > (h / 2 - 16)) pos.y = (h / 2 - 16);
+    background: new Texture("res/images/bg-night.png"),
+    spaceship: new Texture("res/images/spaceship.png"),
+    building: new Texture("res/images/building.png")
 };
 
-// Bullets
-const bullets = new Container();
-function fire(x, y) {
-    const bullet = new Sprite(textures.bullet);
-    bullet.pos.x = x;
-    bullet.pos.y = y;
-    bullet.update = function(dt) {
-        this.pos.x += dt * 400;
-        if(this.pos.x > w - 20)
-            bullet.dead = true;
-    };
-    bullets.add(bullet);
-}
-
-// Bad Guys
-const enemies = new Container();
-function spawnEnemy(x, y, speed) {
-    const enemy = new Sprite(textures.enemy);
-    enemy.pos.x = x;
-    enemy.pos.y = y;
-    enemy.direction = Math.round(Math.random() * -2 + 1);
-    enemy.update = function(dt) {
-        this.pos.x += speed * dt;
-        if(this.direction)
-            this.pos.y += speed * dt * this.direction / 2;
-        if(this.pos.x < -32) {
-            this.dead = true;
-            if(!gameOver)
-                cityLifesAmount -= 1;
-        }
-        if(this.pos.y >= 130 || this.pos.y <= 0)
-            this.direction *= -1;
-    };
-    enemies.add(enemy);
-}
-
-// Items
-const items = new Container();
-function spawnItem(x, y) {
-    const item = new Sprite(textures.bulletItem);
-    item.pos.x = x;
-    item.pos.y = y;
-    item.update = function(dt) {
-        this.pos.x -= 400 * dt;
-        if(this.pos.x < -16)
-            this.dead = true;
-    };
-    items.add(item);
-}
-
-// Add the score game object
-const score = new Text('score:', {
-    font: '20px sans-serif',
-    fill: '#8B8994',
-    align: 'center'
-});
-score.pos.x = w / 4 * 3;
-score.pos.y = h - 30;
-score.update = function() {
-    score.text = `score: ${scoreAmount}`;
-};
-
-// Add the city lifes
-const cityLifes = new Text('cityLifes:', {
-    font: '20px sans-serif',
-    fill: '#8B8994',
-    align: 'center'
-});
-cityLifes.pos.x = w / 4;
-cityLifes.pos.y = h - 30;
-cityLifes.update = function() {
-    cityLifes.text = `Lifes: ${cityLifesAmount}`;
-};
-
-function handleScore(points = 0) {
-    scoreAmount += points;
-}
-
-// Game Over
-function triggerGameOver() {
-    const gameOverMessage = new Text("Game Over", {
-        font: "30pt sans-serif",
-        fill: "#8B8994",
-        align: "center"
-    });
-    gameOverMessage.pos = {x: w / 2, y: 120};
-    scene.add(gameOverMessage);
-    scene.remove(ship);
-    gameOver = true;
-}
-
-// Add everything to the scene container
 scene.add(new Sprite(textures.background));
-scene.add(ship);
-scene.add(bullets);
-scene.add(enemies);
-scene.add(items);
-scene.add(score);
-scene.add(cityLifes);
+
+const buildings = scene.add(new Container());
+const makeRandom = (b, x) => {
+    b.scale.x = math.randf(1, 3);
+    b.scale.y = math.randf(1, 4);
+    b.pos.x = x;
+    b.pos.y = h - b.scale.y * 64;
+};
+for(let x = 0; x < 20; x++) {
+    const b = buildings.add(new Sprite(textures.building));
+    makeRandom(b, math.rand(w));
+}
+
+const ship = scene.add(new Sprite(textures.spaceship));
+ship.pos = {x: 80, y: 120};
+
+ship.update = function(dt, t) {
+    // Wobbly ship
+    const {scale} = this;
+    scale.x = Math.abs(Math.sin(t)) + 1;
+    scale.y = Math.abs(Math.sin(t * 1.33)) + 1;
+    this.pivot = {x: 16, y: 16};
+    this.rotation += 5 * dt;
+};
+
+game.run(dt => {
+    buildings.map(b => {
+        b.pos.x -= 100 * dt;
+        if(b.pos.x < -80) {
+            makeRandom(b, w);
+        }
+    });
+});

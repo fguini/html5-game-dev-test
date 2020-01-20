@@ -14,6 +14,10 @@ class Container {
         return child;
     }
 
+    map(f) {
+        return this.children.map(f);
+    }
+
     update(dt, t) {
         this.children = this.children.filter((child) => {
             if(child.update)
