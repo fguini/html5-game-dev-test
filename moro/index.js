@@ -5,7 +5,7 @@ import Game from './Game';
 import Renderers from './renderers';
 import math from './utils/math';
 
-export default {
+export {
     Container,
     Controls,
     Entities,

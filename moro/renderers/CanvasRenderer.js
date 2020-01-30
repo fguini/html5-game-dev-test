@@ -1,4 +1,5 @@
 import Entities from './entities';
+import TileSprite from './entities/TileSprite';
 const {Sprite, Text} = Entities;
 
 class CanvasRenderer {
@@ -52,7 +53,9 @@ function renderRec(ctx, container) {
 function draw(entity, ctx) {
     if(entity instanceof Text)
         drawText(entity, ctx);
-    if(entity instanceof Sprite)
+    if(entity instanceof TileSprite)
+        drawTileSprite(entity, ctx);
+    else if(entity instanceof Sprite)
         drawSprite(entity, ctx);
 }
 
@@ -66,6 +69,20 @@ function drawText(entity, ctx) {
 
 function drawSprite(entity, ctx) {
     ctx.drawImage(entity.texture.image, 0, 0);
+}
+
+function drawTileSprite(entity, ctx) {
+    ctx.drawImage(
+        entity.texture.image,
+        entity.frame.x * entity.tileW,
+        entity.frame.y * entity.tileH,
+        entity.tileW,
+        entity.tileH,
+        0,
+        0,
+        entity.tileW,
+        entity.tileH
+    );
 }
 
 export default CanvasRenderer;
